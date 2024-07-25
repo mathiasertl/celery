@@ -519,6 +519,25 @@ class test_App:
             assert foo() is None
             check.assert_called_once()
 
+    def test_task_with_pydantic_import_error(self):
+        """Test a pydantic task with no import. Improves the code coverage"""
+        with self.Celery() as app:
+            # Removing pydantic from modules
+            pydantic_import = sys.modules["pydantic"]
+            sys.modules["pydantic"] = None            
+
+            @app.task(pydantic=True)
+            def foo():
+                return True
+
+            try:
+                foo()
+            except ImproperlyConfigured:
+                assert True
+            
+            # Re-registering pydantic into modules
+            sys.modules["pydantic"] = pydantic_import
+
     def test_task_with_pydantic_with_arg_and_kwarg(self):
         """Test a pydantic task with simple (non-pydantic) arg/kwarg and return value."""
         with self.Celery() as app:
